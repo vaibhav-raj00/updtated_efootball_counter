@@ -1,6 +1,6 @@
 const moment = require('moment');
-const { isUserAllowed } = require('./database');
 const config = require('./config');
+const database = require('./database');
 
 function parseDate(dateString) {
     if (!dateString) return null;
@@ -27,7 +27,13 @@ function parseDate(dateString) {
 }
 
 function isOwner(userId) {
-    return config.owners.includes(userId);
+    // Check if userId is in the owners array
+    if (Array.isArray(config.owners)) {
+        return config.owners.includes(userId);
+    }
+    
+    // Fallback to direct comparison if owners is not an array
+    return userId === config.owners;
 }
 
 async function hasPermission(userId) {
@@ -36,7 +42,7 @@ async function hasPermission(userId) {
     
     // Check if user is in allowed users list
     try {
-        return await isUserAllowed(userId);
+        return await database.isUserAllowed(userId);
     } catch (error) {
         console.error('Error checking user permission:', error);
         return false;
@@ -77,10 +83,11 @@ function chunkArray(array, size) {
 }
 
 function escapeMarkdown(text) {
-    return text.replace(/[\\`*_{}[\]()~>#+\-=|.!]/g, '\\$&');
+    return text.replace(/[\\`*_{}[\]()~>#+=|.!-]/g, '\\$&');
 }
 
 function truncateString(str, maxLength) {
+    if (!str) return '';
     if (str.length <= maxLength) return str;
     return str.substring(0, maxLength - 3) + '...';
 }
