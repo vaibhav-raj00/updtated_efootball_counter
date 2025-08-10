@@ -40,6 +40,7 @@ async function sendWebhookMessage(content, embeds = null, isAdminChannel = false
             port: url.port || 443,
             path: url.pathname + url.search,
             method: 'POST',
+            timeout: 10000, // 10 second timeout
             headers: {
                 'Content-Type': 'application/json',
                 'Content-Length': Buffer.byteLength(data)
@@ -63,8 +64,17 @@ async function sendWebhookMessage(content, embeds = null, isAdminChannel = false
                 });
             });
 
+            req.on('timeout', () => {
+                req.destroy();
+                reject(new Error('Webhook request timed out after 10 seconds'));
+            });
+
             req.on('error', (error) => {
-                reject(error);
+                if (error.code === 'ECONNRESET' || error.message.includes('socket hang up')) {
+                    reject(new Error('Webhook connection was reset - please verify the webhook URL is valid and active'));
+                } else {
+                    reject(error);
+                }
             });
 
             req.write(data);
