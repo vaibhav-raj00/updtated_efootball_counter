@@ -1,10 +1,6 @@
-// server.js - Create this file in your project root
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
-
-// Import your Discord bot
-const { client } = require('./index');
 
 // Basic route for uptime monitoring
 app.get('/', (req, res) => {
@@ -12,8 +8,14 @@ app.get('/', (req, res) => {
 });
 
 // Start the server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server listening on port ${port}`);
 });
-// Start your bot in a separate process
-require('./index');
+
+// Import your Discord bot
+try {
+  require('./index');
+  console.log('Discord bot started');
+} catch (error) {
+  console.error('Error starting Discord bot:', error);
+}
