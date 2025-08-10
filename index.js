@@ -1,10 +1,10 @@
 const { Client } = require('discord.js-selfbot-v13');
-const { initDatabase } = require('./database');
+const config = require('./config');
+const { sendWebhookEmbed } = require('./webhook');
+const database = require('./database');
 const { setupCommands } = require('./commands');
 const { scanServer } = require('./scanner');
 const { startScheduler } = require('./scheduler');
-const config = require('./config');
-const { sendWebhookEmbed } = require('./webhook');
 
 const client = new Client({
     checkUpdate: false,
@@ -27,7 +27,7 @@ client.once('ready', async () => {
     
     try {
         // Initialize database
-        await initDatabase();
+        await database.initDatabase();
         console.log('Database initialized successfully');
         
         // Setup command handlers
@@ -93,7 +93,7 @@ client.on('messageCreate', async (message) => {
     if (global.botStatus) {
         global.botStatus.lastActivity = new Date();
         global.botStatus.lastMessage = {
-            channelName: message.channel.name,
+            channelName: message.channel?.name || 'unknown',
             time: new Date()
         };
     }
@@ -102,8 +102,7 @@ client.on('messageCreate', async (message) => {
     if (message.guild?.id !== config.targetGuildId) return;
     
     try {
-        const { insertMessage } = require('./database');
-        await insertMessage({
+        await database.insertMessage({
             messageId: message.id,
             authorId: message.author.id,
             authorUsername: message.author.username,
@@ -127,14 +126,13 @@ client.on('messageDelete', async (message) => {
     if (global.botStatus) {
         global.botStatus.lastActivity = new Date();
         global.botStatus.lastDeletedMessage = {
-            channelName: message.channel.name,
+            channelName: message.channel?.name || 'unknown',
             time: new Date()
         };
     }
     
     try {
-        const { markMessageDeleted } = require('./database');
-        await markMessageDeleted(message.id);
+        await database.markMessageDeleted(message.id);
     } catch (error) {
         console.error('Error marking message as deleted:', error);
     }
@@ -152,8 +150,7 @@ client.on('channelDelete', async (channel) => {
     }
     
     try {
-        const { markChannelMessagesDeleted } = require('./database');
-        await markChannelMessagesDeleted(channel.id);
+        await database.markChannelMessagesDeleted(channel.id);
     } catch (error) {
         console.error('Error marking channel messages as deleted:', error);
     }
