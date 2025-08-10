@@ -174,7 +174,7 @@ async function handleCountCommand(message, args, guildId, isAdminChannel) {
     const guild = message.guild;
     let modUserIds = [];
 
-    if (config.modRoleId && config.modRoleId !== 'YOUR_MOD_ROLE_ID_HERE') {
+    if (config.modRoleId && config.modRoleId !== '1343908438060695664') {
         const modRole = guild.roles.cache.get(config.modRoleId);
         if (modRole) {
             modUserIds = modRole.members.map(member => member.id);
@@ -396,5 +396,6 @@ async function handleScanCommand(message, client, isAdminChannel) {
         await sendWebhookEmbed('❌ Error', 'Server scan failed. Check console for details.', [], 0xff0000, isAdminChannel);
     }
 }
+
 
 module.exports = { setupCommands };
