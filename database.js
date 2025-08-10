@@ -263,6 +263,23 @@ async function getChannelMessageCount(channelId, date = null) {
     }
 }
 
+// Get message count by channel
+function getMessageCountByChannel() {
+    try {
+        const channels = {};
+        data.messages.forEach(message => {
+            if (!channels[message.channelName]) {
+                channels[message.channelName] = 0;
+            }
+            channels[message.channelName]++;
+        });
+        return channels;
+    } catch (error) {
+        console.error('Error getting message count by channel:', error);
+        return {};
+    }
+}
+
 // Get moderator messages
 async function getModeratorMessages(guildId, modUserIds, date) {
     try {
@@ -282,7 +299,7 @@ async function getModeratorMessages(guildId, modUserIds, date) {
 
         const grouped = {};
         filteredMessages.forEach(message => {
-            const key = `${message.authorId}-\${message.channelId}`;
+            const key = `${message.authorId}-${message.channelId}`;
             if (!grouped[key]) {
                 grouped[key] = {
                     authorId: message.authorId,
@@ -401,39 +418,49 @@ async function isUserAllowed(userId) {
 
 // Get database stats
 function getDatabaseStats() {
-    return {
-        totalMessages: data.messages.length,
-        allowedUsers: data.allowedUsers.length,
-        lastSaveTime,
-        messagesByChannel: getMessageCountByChannel(),
-        diskUsage: getDiskUsage()
-    };
+    try {
+        // Rough estimate based on JSON stringification
+        const jsonSize = JSON.stringify(data).length;
+        
+        return {
+            totalMessages: data.messages.length,
+            allowedUsers: data.allowedUsers.length,
+            lastSaveTime,
+            messagesByChannel: getMessageCountByChannel(),
+            diskUsage: {
+                bytes: jsonSize,
+                kilobytes: Math.round(jsonSize / 1024),
+                megabytes: (jsonSize / (1024 * 1024)).toFixed(2)
+            }
+        };
+    } catch (error) {
+        console.error('Error getting database stats:', error);
+        return { 
+            totalMessages: 0,
+            allowedUsers: 0,
+            diskUsage: { bytes: 0, kilobytes: 0, megabytes: '0.00' }
+        };
+    }
 }
 
-// Helper function to get message count by channel
-function getMessageCountByChannel() {
-    const channels = {};
-    data.messages.forEach(message => {
-        if (!channels[message.channelName]) {
-            channels[message.channelName] = 0;
-        }
-        channels[message.channelName]++;
-    });
-    return channels;
-}
-
-// Helper function to estimate disk usage
-function getDiskUsage() {
-try {
-// Rough estimate based on JSON stringification
-const jsonSize = JSON.stringify(data).length;
-return {
-bytes: jsonSize,
-kilobytes: Math.round(jsonSize / 1024),
-megabytes: (jsonSize / (1024 * 1024)).toFixed(2)
+// Export all functions
+module.exports = {
+    initDatabase,
+    saveData,
+    insertMessage,
+    batchInsertMessages,
+    markMessageDeleted,
+    markChannelMessagesDeleted,
+    getMessageCount,
+    getUserMessageCount,
+    getChannelMessageCount,
+    getModeratorMessages,
+    getModsAndUsersCount,
+    addAllowedUser,
+    removeAllowedUser,
+    getAllowedUsers,
+    isUserAllowed,
+    createBackup,
+    getDatabaseStats,
+    getMessageCountByChannel
 };
-} catch (error) {
-console.error('Error calculating disk usage:', error);
-return { bytes: 0, kilobytes: 0, megabytes: '0.00' };
-}
-}
