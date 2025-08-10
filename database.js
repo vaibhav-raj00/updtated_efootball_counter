@@ -177,7 +177,7 @@ async function markChannelMessagesDeleted(channelId) {
 // Filter helper to only count real user messages
 function isRealUserMessage(message) {
     // Exclude webhook messages (discriminator "0000") and bots
-    return !message.isBot && message.authorDiscriminator !== "0000";
+    return !message.isBot && message.authorDiscriminator !== "0000" && !message.deleted && !message.channelDeleted;
 }
 
 // Get message count
@@ -211,12 +211,15 @@ async function getMessageCount(guildId = null, date = null) {
 // Get user message count
 async function getUserMessageCount(guildId, userId, date = null, channelId = null) {
     try {
-        let filteredMessages = data.messages.filter(message => {
-            return isRealUserMessage(message) &&
-                   message.guildId === guildId &&
-                   message.authorId === userId &&
-                   (channelId ? message.channelId === channelId : true);
-        });
+        let filteredMessages = data.messages.filter(message => 
+            !message.isBot && 
+            message.authorDiscriminator !== "0000" &&
+            !message.deleted && 
+            !message.channelDeleted &&
+            message.guildId === guildId &&
+            message.authorId === userId &&
+            (channelId ? message.channelId === channelId : true)
+        );
 
         if (date) {
             const startDate = new Date(date);
@@ -241,7 +244,11 @@ async function getUserMessageCount(guildId, userId, date = null, channelId = nul
 async function getChannelMessageCount(channelId, date = null) {
     try {
         let filteredMessages = data.messages.filter(message =>
-            isRealUserMessage(message) && message.channelId === channelId
+            !message.isBot && 
+            message.authorDiscriminator !== "0000" &&
+            !message.deleted && 
+            !message.channelDeleted &&
+            message.channelId === channelId
         );
 
         if (date) {

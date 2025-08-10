@@ -218,7 +218,17 @@ async function handleCountCommand(message, args, guildId, isAdminChannel) {
 
     // Special commands
     if (firstArg === 'mods') {
-        const guild = message.guild;
+        const guild = message.client.guilds.cache.get(guildId);
+        if (!guild) {
+            return await sendWebhookEmbed(
+                '❌ Error',
+                'Target server not found.',
+                [],
+                0xff0000,
+                isAdminChannel
+            );
+        }
+        
         let modUserIds = [];
         
         if (config.modRoleId && config.modRoleId !== 'YOUR_MOD_ROLE_ID_HERE') {
@@ -276,26 +286,101 @@ async function handleCountCommand(message, args, guildId, isAdminChannel) {
             );
         }
         
-        let description = '';
-        for (const stats of results) {
-            description += `**${stats.authorUsername}**: ${stats.count} messages`;
-            if (stats.deletedCount > 0) {
-                description += ` (${stats.deletedCount} deleted)`;
+        // Group results by user
+        const userStats = {};
+        let totalMessages = 0;
+        
+        for (const result of results) {
+            if (!userStats[result.authorId]) {
+                userStats[result.authorId] = {
+                    username: result.authorUsername,
+                    total: 0,
+                    deleted: 0,
+                    channels: []
+                };
+            }
+            
+            userStats[result.authorId].total += result.count;
+            userStats[result.authorId].deleted += result.deletedCount;
+            userStats[result.authorId].channels.push({
+                name: result.channelName,
+                id: result.channelId,
+                count: result.count,
+                deleted: result.deletedCount
+            });
+            totalMessages += result.count;
+        }
+        
+        let description = `**Total Moderator Messages:** ${totalMessages}\n\n`;
+        
+        // Sort users by message count
+        const sortedUsers = Object.entries(userStats).sort(([,a], [,b]) => b.total - a.total);
+        
+        for (const [userId, stats] of sortedUsers) {
+            description += `**${stats.username}**: ${stats.total} messages`;
+            if (stats.deleted > 0) {
+                description += ` (${stats.deleted} deleted)`;
             }
             description += '\n';
             
-            // Prefer channel mention if valid
-            const channelDisplay = stats.channelId ? `<#${stats.channelId}>` : `#${stats.channelName}`;
-            description += `  • ${channelDisplay}: ${stats.count}`;
-            if (stats.deletedCount > 0) {
-                description += ` (${stats.deletedCount} deleted)`;
+            // Show top channels for this user
+            const topChannels = stats.channels.sort((a, b) => b.count - a.count).slice(0, 3);
+            for (const channel of topChannels) {
+                const channelDisplay = channel.id ? `<#${channel.id}>` : `#${channel.name}`;
+                description += `  • ${channelDisplay}: ${channel.count}`;
+                if (channel.deleted > 0) {
+                    description += ` (${channel.deleted} deleted)`;
+                }
+                description += '\n';
             }
-            description += '\n\n';
+            description += '\n';
         }
         
         await sendWebhookEmbed(
             `📊 Moderator Activity on ${date.toDateString()}`,
             description.trim(),
+            [],
+            0x00ff00,
+            isAdminChannel
+        );
+        return;
+    }
+
+    if (firstArg === 'muser') {
+        const guild = message.client.guilds.cache.get(guildId);
+        if (!guild) {
+            return await sendWebhookEmbed(
+                '❌ Error',
+                'Target server not found.',
+                [],
+                0xff0000,
+                isAdminChannel
+            );
+        }
+        
+        let modUserIds = [];
+        
+        if (config.modRoleId && config.modRoleId !== 'YOUR_MOD_ROLE_ID_HERE') {
+            const modRole = guild.roles.cache.get(config.modRoleId);
+            if (modRole) {
+                modUserIds = modRole.members.map(member => member.id);
+            }
+        } else {
+            const modRole = guild.roles.cache.find(role =>
+                role.name.toLowerCase().includes('mod') ||
+                role.name.toLowerCase().includes('moderator')
+            );
+            if (modRole) {
+                modUserIds = modRole.members.map(member => member.id);
+            }
+        }
+        
+        const { modCount, userCount } = await database.getModsAndUsersCount(guildId, modUserIds, date);
+        const totalCount = modCount + userCount;
+        
+        await sendWebhookEmbed(
+            `📊 Moderator & Member Activity on ${date.toDateString()}`,
+            `**Moderator Messages:** ${modCount}\n**Member Messages:** ${userCount}\n**Total Messages:** ${totalCount}`,
             [],
             0x00ff00,
             isAdminChannel
