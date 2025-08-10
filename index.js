@@ -42,19 +42,20 @@ client.once('ready', async () => {
         }
         
         console.log('Bot is fully operational!');
+        
+        const targetGuildObj = client.guilds.cache.get(config.targetGuildId);
+        // Embed message
+        const title = '✅ BOT READY TO USE';
+        const description = `The bot has scanned all existing messages in **${targetGuildObj?.name || 'Unknown'}** and is now fully operational.`;
+
+        // Send to Admin channel webhook
+        await sendWebhookEmbed(title, description, [], 0x00ff00, true);
+
+        // Send to Target server webhook
+        await sendWebhookEmbed(title, description, [], 0x00ff00, false);
     } catch (error) {
         console.error('Error during self-bot initialization:', error);
     }
-     const targetGuild = client.guilds.cache.get(config.targetGuildId);
-    // Embed message
-            const title = '✅ BOT READY TO USE';
-            const description = `The bot has scanned all existing messages in **${targetGuild.name}** and is now fully operational.`;
-
-            // Send to Admin channel webhook
-            await sendWebhookEmbed(title, description, [], 0x00ff00, true);
-
-            // Send to Target server webhook
-            await sendWebhookEmbed(title, description, [], 0x00ff00, false);
 });
 
 // Message create event - track new messages
@@ -64,20 +65,19 @@ client.on('messageCreate', async (message) => {
     
     try {
         const { insertMessage } = require('./database');
-await insertMessage({
-    messageId: message.id,
-    authorId: message.author.id,
-    authorUsername: message.author.username,
-    authorDiscriminator: message.author.discriminator, // store this
-    channelId: message.channel.id,
-    channelName: message.channel.name,
-    guildId: message.guild?.id || null,
-    content: message.content,
-    timestamp: message.createdAt,
-    deleted: false,
-    isBot: message.author.bot || false
-});
-
+        await insertMessage({
+            messageId: message.id,
+            authorId: message.author.id,
+            authorUsername: message.author.username,
+            authorDiscriminator: message.author.discriminator, // store this
+            channelId: message.channel.id,
+            channelName: message.channel.name,
+            guildId: message.guild?.id || null,
+            content: message.content,
+            timestamp: message.createdAt,
+            deleted: false,
+            isBot: message.author.bot || false
+        });
     } catch (error) {
         console.error('Error tracking new message:', error);
     }
@@ -108,3 +108,6 @@ client.on('error', console.error);
 
 // Login with bot token
 client.login(process.env.DISCORD_TOKEN || config.token);
+
+// Export the client for use in server.js
+module.exports = { client };
