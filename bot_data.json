@@ -26571,6 +26571,58 @@
       "timestamp": "2025-08-10T07:56:57.502Z",
       "deleted": false,
       "isBot": false
+    },
+    {
+      "messageId": "1404010629605359677",
+      "authorId": "843146868070416415",
+      "authorUsername": "vaibhav._raj._",
+      "authorDiscriminator": "0",
+      "channelId": "1339910481694953502",
+      "channelName": "bot-setup",
+      "guildId": "1339906663938920511",
+      "content": "&info",
+      "timestamp": "2025-08-10T07:56:59.354Z",
+      "deleted": true,
+      "isBot": false
+    },
+    {
+      "messageId": "1404010630574374923",
+      "authorId": "843146868070416415",
+      "authorUsername": "vaibhav._raj._",
+      "authorDiscriminator": "0",
+      "channelId": "1339910481694953502",
+      "channelName": "bot-setup",
+      "guildId": "1339906663938920511",
+      "content": "❌ An error occurred while executing the command.",
+      "timestamp": "2025-08-10T07:56:59.585Z",
+      "deleted": false,
+      "isBot": false
+    },
+    {
+      "messageId": "1404010636379426949",
+      "authorId": "240254129333731328",
+      "authorUsername": "Vortex",
+      "authorDiscriminator": "8540",
+      "channelId": "1340280426303979530",
+      "channelName": "│📂・vortex-logs",
+      "guildId": "1339906663938920511",
+      "content": "`[13:27:00]` ❌ **vaibhav._raj._** (ID:843146868070416415)'s message has been deleted from <#1339910481694953502>:",
+      "timestamp": "2025-08-10T07:57:00.969Z",
+      "deleted": false,
+      "isBot": true
+    },
+    {
+      "messageId": "1404010636106797058",
+      "authorId": "1354102678891794442",
+      "authorUsername": "Dyno",
+      "authorDiscriminator": "0000",
+      "channelId": "1340280648249770034",
+      "channelName": "│📂・msg-logs",
+      "guildId": "1339906663938920511",
+      "content": "",
+      "timestamp": "2025-08-10T07:57:00.904Z",
+      "deleted": false,
+      "isBot": true
     }
   ],
   "allowedUsers": [],
