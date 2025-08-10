@@ -19,7 +19,7 @@ module.exports = {
     adminWebhookUrl: process.env.ADMIN_WEBHOOK_URL,
     
     // Moderator role ID for mod detection
-    modRoleId: process.env.MOD_ROLE_ID,
+    modRoleId: process.env.MOD_ROLE_ID || '1343908438060695664',
     
     // Database settings
     database: {
@@ -67,3 +67,4 @@ module.exports = {
         enableDetailedLogging: true
     }
 };
+
